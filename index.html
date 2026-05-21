@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校園二手課本交換站</title>
+    <style>
+        /* 保持原有的 CSS 樣式不變 */
+        :root {
+            --primary-color: #2c7a7b;
+            --primary-hover: #234e52;
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-secondary: #718096;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --success: #48bb78;
+            --done-bg: #edf2f7;
+            --done-text: #a0aec0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        header { text-align: center; margin-bottom: 40px; }
+        h1 { color: var(--primary-color); font-size: 2.5rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .subtitle { color: var(--text-secondary); font-size: 1.1rem; }
+
+        .main-content { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+        @media (max-width: 768px) { .main-content { grid-template-columns: 1fr; } }
+
+        .form-card { background: var(--card-bg); padding: 25px; border-radius: var(--border-radius); box-shadow: var(--shadow); height: fit-content; position: sticky; top: 20px; }
+        .form-card h2 { margin-bottom: 20px; font-size: 1.25rem; border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
+        input[type="text"], textarea { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 1rem; transition: border-color 0.2s; }
+        input:focus, textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(44, 122, 123, 0.1); }
+        textarea { resize: vertical; min-height: 80px; }
+        .btn-submit { width: 100%; padding: 12px; background-color: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        .btn-submit:hover { background-color: var(--primary-hover); }
+
+        .list-section { display: flex; flex-direction: column; gap: 20px; }
+        .filters { display: flex; gap: 10px; background: #e2e8f0; padding: 5px; border-radius: 50px; width: fit-content; }
+        .filter-btn { border: none; background: transparent; padding: 8px 20px; border-radius: 40px; cursor: pointer; font-weight: 600; color: var(--text-secondary); transition: all 0.2s; }
+        .filter-btn.active { background: white; color: var(--primary-color); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        .card-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .book-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 20px; box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; border-left: 5px solid var(--primary-color); position: relative; }
+        .book-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+        .book-card.done { border-left-color: var(--text-secondary); background-color: var(--done-bg); transform: none; }
+        .book-card.done .card-title { text-decoration: line-through; color: var(--text-secondary); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .card-subject { background: #e6fffa; color: var(--primary-color); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .book-card.done .card-subject { background: #cbd5e0; color: var(--text-secondary); }
+        
+        .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; color: var(--text-main); word-break: break-word; }
+        .card-info { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 15px; flex-grow: 1; white-space: pre-wrap; }
+        .card-footer { margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid #eee; }
+        .card-date { font-size: 0.8rem; color: #a0aec0; }
+        .btn-toggle { padding: 6px 12px; border: 1px solid var(--primary-color); background: transparent; color: var(--primary-color); border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+        .btn-toggle:hover { background: var(--primary-color); color: white; }
+        .book-card.done .btn-toggle { border-color: var(--text-secondary); color: var(--text-secondary); }
+        .book-card.done .btn-toggle:hover { background: var(--text-secondary); color: white; }
+        
+        .sold-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); border: 3px solid var(--text-secondary); color: var(--text-secondary); font-size: 1.5rem; font-weight: 900; padding: 5px 15px; border-radius: 8px; text-transform: uppercase; opacity: 0.2; pointer-events: none; z-index: 1; }
+        
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 17px; opacity: 0; transition: opacity 0.3s, bottom 0.3s; }
+        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+        .empty-state { text-align: center; padding: 40px; color: var(--text-secondary); grid-column: 1 / -1; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                校園二手課本交換站
+            </h1>
+            <p class="subtitle">循環利用，讓知識流動起來</p>
+        </header>
+
+        <div class="main-content">
+            <!-- 左側：新增表單 -->
+            <section class="form-card">
+                <h2>📚 刊登新書</h2>
+                <form id="addRecordForm">
+                    <div class="form-group">
+                        <label for="bookName">課本名稱 <span style="color:red">*</span></label>
+                        <input type="text" id="bookName" placeholder="例如：微積分、普通物理學" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">所屬科目 <span style="color:red">*</span></label>
+                        <input type="text" id="subject" placeholder="例如：數學系、通識課程" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bookInfo">價錢與書本狀態 (選填)</label>
+                        <textarea id="bookInfo" placeholder="例如：250元，書約九成新，無畫線。"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit">發布刊登</button>
+                </form>
+            </section>
+
+            <!-- 右側：列表與過濾 -->
+            <section class="list-section">
+                <div class="filters">
+                    <button class="filter-btn active" data-filter="all">全部</button>
+                    <button class="filter-btn" data-filter="active">交換中</button>
+                    <button class="filter-btn" data-filter="done">已售出</button>
+                </div>
+
+                <div id="recordList" class="card-list">
+                    <!-- Javascript 將在此處動態生成卡片 -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="toast">操作成功</div>
+
+    <script>
+        // --- 合約要求的變數與結構 ---
+
+        // 1. 主資料陣列
+        let records = [];
+
+        // 2. localStorage Key
+        const STORAGE_KEY = 'records';
+
+        // --- 合約要求的函式 ---
+
+        /**
+         * 從 localStorage 載入資料
+         * @returns {Array} records 陣列
+         */
+        function loadData() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        /**
+         * 將資料儲存至 localStorage
+         * @param {Array} record - 欲儲存的 records 陣列
+         */
+        function saveData(record) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+        }
+
+        /**
+         * 建立一筆新的 record 物件
+         * @param {Object} formData - 表單資料物件
+         * @returns {Object} 符合結構的 record
+         */
+        function createRecord(formData) {
+            return {
+                id: Date.now().toString(),
+                createdAt: new Date().toISOString(),
+                status: 'active',
+                bookName: formData.bookName,
+                subject: formData.subject,
+                bookInfo: formData.bookInfo || ''
+            };
+        }
+
+        /**
+         * 更新指定 ID 的 record
+         * @param {String} id - record 的 ID
+         * @param {Object} changes - 欲更新的欄位物件
+         */
+        function updateRecord(id, changes) {
+            const index = records.findIndex(r => r.id === id);
+            if (index !== -1) {
+                records[index] = { ...records[index], ...changes };
+            }
+        }
+
+        /**
+         * 渲染清單至頁面
+         * @param {Array} recordsToShow - 欲顯示的 records 陣列
+         */
+        function renderList(recordsToShow) {
+            const listEl = document.getElementById('recordList');
+            listEl.innerHTML = '';
+
+            if (recordsToShow.length === 0) {
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <h3>目前沒有資料</h3>
+                        <p>快去左側新增一筆課本吧！</p>
+                    </div>
+                `;
+                return;
+            }
+
+            recordsToShow.forEach(record => {
+                const isDone = record.status === 'done';
+                const card = document.createElement('div');
+                card.className = `book-card ${isDone ? 'done' : ''}`;
+                
+                const btnText = isDone ? '重新上架' : '標記已售出';
+                const displayInfo = record.bookInfo ? record.bookInfo : '無詳細資訊';
+
+                card.innerHTML = `
+                    ${isDone ? '<div class="sold-badge">已售出</div>' : ''}
+                    <div class="card-header">
+                        <span class="card-subject">${escapeHtml(record.subject)}</span>
+                    </div>
+                    <div class="card-title">${escapeHtml(record.bookName)}</div>
+                    <div class="card-info">${escapeHtml(displayInfo)}</div>
+                    <div class="card-footer">
+                        <span class="card-date">${formatDate(record.createdAt)}</span>
+                        <button class="btn-toggle" onclick="handleStatusToggle('${record.id}')">
+                            ${btnText}
+                        </button>
+                    </div>
+                `;
+                listEl.appendChild(card);
+            });
+        }
+
+        // --- 輔助函式與事件邏輯 ---
+
+        // 初始化 App
+        function init() {
+            records = loadData();
+            renderList(records);
+        }
+
+        // 處理表單提交
+        document.getElementById('addRecordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const bookName = document.getElementById('bookName').value.trim();
+            const subject = document.getElementById('subject').value.trim();
+            const bookInfo = document.getElementById('bookInfo').value.trim();
+
+            // 準備表單資料
+            const formData = { bookName, subject, bookInfo };
+
+            // 1. 建立紀錄
+            const newRecord = createRecord(formData);
+
+            // 2. 加入陣列
+            records.unshift(newRecord);
+
+            // 3. 儲存資料
+            saveData(records);
+
+            // 4. 重新渲染 (包含目前的過濾狀態)
+            applyFilterAndRender();
+
+            // 重置表單與提示
+            this.reset();
+            showToast("成功刊登新書！");
+        });
+
+        // 處理狀態切換 (需要掛載到 window 以便 onclick 呼叫)
+        window.handleStatusToggle = function(id) {
+            const record = records.find(r => r.id === id);
+            if (record) {
+                const newStatus = record.status === 'active' ? 'done' : 'active';
+                
+                // 更新資料
+                updateRecord(id, { status: newStatus });
+                
+                // 儲存與渲染
+                saveData(records);
+                applyFilterAndRender();
+                
+                const msg = newStatus === 'done' ? "已標記為售出/交換" : "已重新上架";
+                showToast(msg);
+            }
+        };
+
+        // 過濾器邏輯
+        let currentFilter = 'all';
+        const filterBtns = document.querySelectorAll('.filter-btn');
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                applyFilterAndRender();
+            });
+        });
+
+        function applyFilterAndRender() {
+            const filteredRecords = records.filter(record => {
+                if (currentFilter === 'all') return true;
+                return record.status === currentFilter;
+            });
+            renderList(filteredRecords);
+        }
+
+        // 工具：日期格式化
+        function formatDate(isoString) {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            return date.toLocaleDateString('zh-TW', {
+                year: 'numeric', month: '2-digit', day: '2-digit'
+            });
+        }
+
+        // 工具：XSS 防護
+        function escapeHtml(text) {
+            if (!text) return text;
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // 工具：Toast 提示
+        function showToast(message) {
+            const toastEl = document.getElementById('toast');
+            toastEl.textContent = message;
+            toastEl.className = "show";
+            setTimeout(() => { toastEl.className = toastEl.className.replace("show", ""); }, 3000);
+        }
+
+        // 啟動
+        init();
+
+    </script>
+</body>
+</html>
