@@ -129,6 +129,24 @@
     <div id="toast">操作成功</div>
 
     <script>
+        // --- Backend Connector Settings ---
+
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRcpWIo7IyYcQ4AHxKSmUOjXUqLXoeYI-xvqy7Hzmx7JKGMvZz_NF_Q1cy8sKPFij3CQ/exec";
+
+        // 資料對應表：Sheet Header (中文) <-> Frontend Key (英文)
+        const KEY_MAP_SHEET_TO_FRONT = {
+            "ID": "id",
+            "建立時間": "createdAt",
+            "狀態": "status",
+            "課本名稱": "bookName",
+            "所屬科目": "subject",
+            "書本資訊": "bookInfo"
+        };
+
+        const KEY_MAP_FRONT_TO_SHEET = Object.fromEntries(
+            Object.entries(KEY_MAP_SHEET_TO_FRONT).map(([k, v]) => [v, k])
+        );
+
         // --- 合約要求的變數與結構 ---
 
         // 1. 主資料陣列
@@ -228,16 +246,94 @@
             });
         }
 
+        // --- 新增 Backend Connector 函式 ---
+
+        /**
+         * 將 Sheet 資料轉換為 Frontend 格式
+         * @param {Object} sheetRecord - 後端回傳的單筆資料
+         * @returns {Object} 轉換後的 Frontend Record
+         */
+        function normalizeRecord(sheetRecord) {
+            const record = {};
+            Object.keys(sheetRecord).forEach(sheetKey => {
+                const frontKey = KEY_MAP_SHEET_TO_FRONT[sheetKey];
+                if (frontKey) {
+                    record[frontKey] = sheetRecord[sheetKey];
+                }
+            });
+            return record;
+        }
+
+        /**
+         * 從 Google Sheet 讀取資料
+         */
+        async function fetchRecordsFromSheet() {
+            const res = await fetch(APPS_SCRIPT_URL);
+            const data = await res.json();
+            if (data.ok) {
+                // 將所有後端資料 normalize 後回傳
+                return data.records.map(normalizeRecord);
+            }
+            throw new Error(data.error || "Unknown error fetching data");
+        }
+
+        /**
+         * 同步資料到 Google Sheet
+         * @param {Object} payload - { action: "create"|"update", ... }
+         */
+        async function syncToSheet(payload) {
+            // 複製一份 payload 進行轉換
+            const transformedPayload = { ...payload };
+
+            // 若是 create，需將 record key 轉為 Sheet header
+            if (payload.action === "create" && payload.record) {
+                transformedPayload.record = {};
+                Object.entries(payload.record).forEach(([key, val]) => {
+                    const sheetKey = KEY_MAP_FRONT_TO_SHEET[key] || key;
+                    transformedPayload.record[sheetKey] = val;
+                });
+            }
+
+            // 若是 update，需將 changes key 轉為 Sheet header
+            if (payload.action === "update" && payload.changes) {
+                transformedPayload.changes = {};
+                Object.entries(payload.changes).forEach(([key, val]) => {
+                    const sheetKey = KEY_MAP_FRONT_TO_SHEET[key] || key;
+                    transformedPayload.changes[sheetKey] = val;
+                });
+            }
+
+            try {
+                await fetch(APPS_SCRIPT_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(transformedPayload)
+                });
+            } catch (err) {
+                console.error("Sync to sheet failed", err);
+                // 不阻斷使用者操作，僅 Log 錯誤
+            }
+        }
+
         // --- 輔助函式與事件邏輯 ---
 
-        // 初始化 App
-        function init() {
-            records = loadData();
+        // 初始化 App (修改為 async 以支援 fetch)
+        async function init() {
+            try {
+                // 1. 優先從 Google Sheet 讀取
+                records = await fetchRecordsFromSheet();
+                // 成功讀取後，更新本地 localStorage 作為快取
+                saveData(records);
+            } catch (err) {
+                console.warn("Backend connection failed, using localStorage fallback:", err);
+                // 2. 失敗則 fallback 到 localStorage
+                records = loadData();
+            }
             renderList(records);
         }
 
         // 處理表單提交
-        document.getElementById('addRecordForm').addEventListener('submit', function(e) {
+        document.getElementById('addRecordForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const bookName = document.getElementById('bookName').value.trim();
@@ -250,22 +346,25 @@
             // 1. 建立紀錄
             const newRecord = createRecord(formData);
 
-            // 2. 加入陣列
+            // 2. 加入陣列 (樂觀更新 UI)
             records.unshift(newRecord);
 
-            // 3. 儲存資料
+            // 3. 儲存資料 (localStorage)
             saveData(records);
 
-            // 4. 重新渲染 (包含目前的過濾狀態)
+            // 4. 重新渲染
             applyFilterAndRender();
+
+            // 5. 同步到 Google Sheet
+            await syncToSheet({ action: "create", record: newRecord });
 
             // 重置表單與提示
             this.reset();
             showToast("成功刊登新書！");
         });
 
-        // 處理狀態切換 (需要掛載到 window 以便 onclick 呼叫)
-        window.handleStatusToggle = function(id) {
+        // 處理狀態切換
+        window.handleStatusToggle = async function(id) {
             const record = records.find(r => r.id === id);
             if (record) {
                 const newStatus = record.status === 'active' ? 'done' : 'active';
@@ -276,6 +375,9 @@
                 // 儲存與渲染
                 saveData(records);
                 applyFilterAndRender();
+                
+                // 同步到 Google Sheet
+                await syncToSheet({ action: "update", id: id, changes: { status: newStatus } });
                 
                 const msg = newStatus === 'done' ? "已標記為售出/交換" : "已重新上架";
                 showToast(msg);
