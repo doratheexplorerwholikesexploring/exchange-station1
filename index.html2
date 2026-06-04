@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校園二手課本交易站</title>
+    <style>
+        :root {
+            --primary-color: #389494;
+            --primary-light: #e6f8f8;
+            --primary-hover: #297272;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-secondary: #718096;
+            --border-color: #e2e8f0;
+            --radius-big: 18px;
+            --radius-normal: 12px;
+            --radius-small: 8px;
+            --shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+            --shadow-hover: 0 8px 18px rgba(0, 0, 0, 0.07);
+            --done-bg: #f1f5f9;
+            --done-text: #94a3b8;
+            --success-green: #48bb78;
+            --green-light: #f0fff4;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding: 24px 18px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 42px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.1rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* 鎖定雙欄結構唔崩版 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 32px;
+        }
+        /* 可交易切滿版單欄 */
+        .main-content.fullpage-active{
+            grid-template-columns: 1fr;
+        }
+
+        .form-card {
+            background: var(--card-bg);
+            padding: 32px;
+            border-radius: var(--radius-big);
+            box-shadow: var(--shadow);
+            height: fit-content;
+            position: sticky;
+            top: 24px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        /* 隱藏內文、保留外框 */
+        .form-card .inner-box.hide-content{
+            visibility: hidden;
+            height:0;
+            overflow:hidden;
+            padding:0;
+        }
+
+        .form-card h2 {
+            margin-bottom: 26px;
+            font-size: 1.35rem;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 12px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom:9px;
+            font-weight: 550;
+            font-size:0.95rem;
+            color: var(--text-main);
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding:15px 16px;
+            border:1px solid var(--border-color);
+            border-radius: var(--radius-normal);
+            font-size: 1.05rem;
+            transition: all 0.25s ease;
+            background: #fff;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(56, 148, 148, 0.12);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height:120px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding:15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-normal);
+            font-size: 1.05rem;
+            font-weight: 550;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            margin-top:8px;
+        }
+        .btn-submit:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .other-subject-wrap {
+            display: none;
+            margin-top:12px;
+        }
+        .other-subject-wrap.show {
+            display: block;
+        }
+
+        .list-section {
+            display: flex;
+            flex-direction: column;
+            gap:22px;
+        }
+        /* 可交易頁時list佔滿全寬 */
+        .fullpage-active .list-section{
+            width:100%;
+        }
+
+        .filters {
+            display: flex;
+            gap:10px;
+            background: #edf2f7;
+            padding:7px;
+            border-radius: 999px;
+            width: fit-content;
+        }
+        .filter-btn {
+            border: none;
+            background: transparent;
+            padding:10px 20px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight:550;
+            color: var(--text-secondary);
+            transition: all 0.25s ease;
+            font-size:0.92rem;
+        }
+        .filter-btn.active {
+            background: white;
+            color: var(--primary-color);
+            box-shadow: var(--shadow);
+        }
+
+        .search-box-wrap{
+            background: var(--card-bg);
+            padding:26px;
+            border-radius: var(--radius-big);
+            box-shadow: var(--shadow);
+            border:1px solid var(--border-color);
+            transition:0.3s;
+        }
+        /* 全庫頁隱藏搜尋、已售出隱藏搜尋 */
+        .search-box-wrap.hide-search,
+        .all-page-hide-search{
+            display:none !important;
+        }
+        .search-box-wrap h4{
+            color:var(--primary-color);
+            margin-bottom:13px;
+            font-weight:600;
+            font-size:1.1rem;
+        }
+
+        .card-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
+            gap:26px;
+        }
+        /* 滿版時書目卡片放大 */
+        .fullpage-active .card-list{
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        }
+
+        .book-card.trade {
+            background: var(--card-bg);
+            border-radius: var(--radius-big);
+            padding:26px;
+            box-shadow: var(--shadow);
+            transition: all 0.28s ease;
+            display: flex;
+            flex-direction: column;
+            border:1px solid #d4f4e3;
+            cursor:pointer;
+        }
+        .book-card.trade:hover{
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-hover);
+        }
+        .book-card.normal{
+            background: var(--card-bg);
+            border-radius: var(--radius-big);
+            padding:24px;
+            box-shadow: var(--shadow);
+            transition: all 0.28s ease;
+            display: flex;
+            flex-direction: column;
+            border:1px solid var(--border-color);
+            cursor:default;
+        }
+        .book-card.done {
+            background-color: var(--done-bg);
+            opacity:0.92;
+        }
+        .book-card.done .card-title {
+            text-decoration: line-through;
+            color: var(--done-text);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom:12px;
+        }
+        .card-subject {
+            background: var(--primary-light);
+            color: var(--primary-color);
+            padding:6px 12px;
+            border-radius:999px;
+            font-size:0.8rem;
+            font-weight:550;
+        }
+        .trade-tip{
+            color:var(--success-green);
+            font-size:0.82rem;
+            font-weight:600;
+            margin-bottom:9px;
+        }
+        .card-title {
+            font-size:1.22rem;
+            font-weight:600;
+            margin-bottom:12px;
+            color: var(--text-main);
+            word-break: break-word;
+        }
+        .card-info {
+            font-size:0.94rem;
+            color: var(--text-secondary);
+            margin-bottom:20px;
+            flex-grow: 1;
+        }
+        .card-footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top:16px;
+            border-top:1px solid var(--border-color);
+        }
+        .card-date {
+            font-size:0.8rem;
+            color: var(--text-secondary);
+        }
+        .btn-toggle {
+            padding:7px 14px;
+            border:1px solid var(--primary-color);
+            background: transparent;
+            color: var(--primary-color);
+            border-radius:999px;
+            cursor: pointer;
+            font-size:0.83rem;
+            font-weight:550;
+            transition: all 0.22s ease;
+        }
+        .btn-toggle:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .book-card.done .btn-toggle {
+            border-color: var(--done-text);
+            color: var(--done-text);
+        }
+        .book-card.done .btn-toggle:hover {
+            background: var(--done-text);
+            color: white;
+        }
+        .sold-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-12deg);
+            border:2px solid var(--done-text);
+            color: var(--done-text);
+            font-size:1.5rem;
+            font-weight:700;
+            padding:7px 18px;
+            border-radius: var(--radius-normal);
+            opacity:0.13;
+            pointer-events: none;
+        }
+        .empty-state {
+            text-align: center;
+            padding:60px 20px;
+            color: var(--text-secondary);
+            grid-column: 1 / -1;
+        }
+        .modal-mask{
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.52);
+            display:none;
+            align-items:center;
+            justify-content:center;
+            z-index:999;
+            padding:15px;
+        }
+        .modal-mask.open{display:flex;}
+        .borrow-modal{
+            width:min(460px,100%);
+            background:#fff;
+            border-radius: var(--radius-big);
+            padding:28px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.12);
+        }
+        .borrow-modal h3{
+            color:var(--primary-color);
+            margin-bottom:22px;
+            padding-bottom:11px;
+            border-bottom:2px solid var(--primary-light);
+        }
+        .modal-btn-group{
+            display:flex;
+            gap:12px;
+            margin-top:24px;
+        }
+        .modal-cancel{
+            flex:1;
+            padding:13px;
+            border:1px solid var(--border-color);
+            background:transparent;
+            border-radius: var(--radius-normal);
+            cursor:pointer;
+            transition:0.2s;
+        }
+        .modal-submit{
+            flex:1;
+            padding:13px;
+            background:var(--primary-color);
+            color:#fff;
+            border:none;
+            border-radius: var(--radius-normal);
+            cursor:pointer;
+            transition:0.2s;
+        }
+        #toast {
+            visibility: hidden;
+            min-width:260px;
+            background-color:#2d3748;
+            color:#fff;
+            text-align:center;
+            border-radius: var(--radius-normal);
+            padding:16px;
+            position:fixed;
+            z-index:100;
+            left:50%;
+            bottom:32px;
+            transform:translateX(-50%);
+            font-size:0.95rem;
+            opacity:0;
+            transition: opacity 0.3s ease, bottom 0.3s ease;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity:1;
+            bottom:42px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                校園二手課本交易站
+            </h1>
+            <p class="subtitle">閒置課本互通，低成本入手舊書</p>
+        </header>
+        <div class="main-content" id="mainWrap">
+            <section class="form-card" id="leftForm">
+                <div class="inner-box" id="leftInner">
+                    <h2>📚 上架閒置課本</h2>
+                    <form id="addRecordForm">
+                        <div class="form-group">
+                            <label for="bookName">課本名稱 <span style="color:red">*</span></label>
+                            <input type="text" id="bookName" placeholder="例如：微積分、普通物理學" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="subjectSelect">所屬科目 <span style="color:red">*</span></label>
+                            <select id="subjectSelect" required>
+                                <option value="">請選擇科目</option>
+                                <option value="中文">中文</option>
+                                <option value="英文">英文</option>
+                                <option value="數學">數學</option>
+                                <option value="物理">物理</option>
+                                <option value="化學">化學</option>
+                                <option value="生物">生物</option>
+                                <option value="other">其他</option>
+                            </select>
+                            <div class="other-subject-wrap" id="otherSubjectWrap">
+                                <input type="text" id="customSubject" placeholder="自行填寫科目名稱">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="bookInfo">價錢與書本狀態 (選填)</label>
+                            <textarea id="bookInfo" placeholder="例如：250元，書約九成新，無畫線。"></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit">發布上架</button>
+                    </form>
+                </div>
+            </section>
+            <section class="list-section">
+                <div class="filters">
+                    <button class="filter-btn active" data-filter="all">全庫書目</button>
+                    <button class="filter-btn" data-filter="active">可交易書籍</button>
+                    <button class="filter-btn" data-filter="done">已售出</button>
+                </div>
+                <div class="search-box-wrap" id="searchWrap">
+                    <h4>🔍 二手書快速搜尋</h4>
+                    <input id="searchInput" placeholder="輸入書名關鍵字（只搜可交易書籍）">
+                </div>
+                <div id="recordList" class="card-list"></div>
+            </section>
+        </div>
+    </div>
+    <div class="modal-mask" id="borrowMask">
+        <div class="borrow-modal">
+            <h3>填寫資料申請書本交易</h3>
+            <form id="borrowForm">
+                <input type="hidden" id="targetBookId">
+                <div class="form-group">
+                    <label>你的姓名 <span style="color:red">*</span></label>
+                    <input type="text" id="borrowName" required placeholder="例如：陳小明">
+                </div>
+                <div class="form-group">
+                    <label>就讀年級 <span style="color:red">*</span></label>
+                    <select id="borrowGrade" required>
+                        <option value="">請揀年級</option>
+                        <option>初一</option><option>初二</option><option>初三</option>
+                        <option>高一</option><option>高二</option><option>高三</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>班別 <span style="color:red">*</span></label>
+                    <input type="text" id="borrowClass" required placeholder="例如：3A / 高二1班">
+                </div>
+                <div class="modal-btn-group">
+                    <button type="button" class="modal-cancel" onclick="closeBorrowModal()">取消</button>
+                    <button type="submit" class="modal-submit">確認申請交易</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="toast">操作成功</div>
+    <script>
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRcpWIo7IyYcQ4AHxKSmUOjXUqLXoeYI-xvqy7Hzmx7JKGMvZz_NF_Q1cy8sKPFij3CQ/exec";
+        const KEY_MAP_SHEET_TO_FRONT = {"ID":"id","建立時間":"createdAt","狀態":"status","課本名稱":"bookName","所屬科目":"subject","書本資訊":"bookInfo"};
+        const KEY_MAP_FRONT_TO_SHEET = Object.fromEntries(Object.entries(KEY_MAP_SHEET_TO_FRONT).map(([k,v])=>[v,k]));
+        let records = [];
+        const STORAGE_KEY = 'records';
+        let currentBorrowBookId = "";
+        let currentFilter = "all";
+        const leftInner = document.getElementById('leftInner');
+        const searchWrap = document.getElementById('searchWrap');
+        const mainWrap = document.getElementById('mainWrap');
+
+        function loadData(){const d=localStorage.getItem(STORAGE_KEY);return d?JSON.parse(d):[];}
+        function saveData(arr){localStorage.setItem(STORAGE_KEY,JSON.stringify(arr));}
+        function createRecord(d){return {id:Date.now().toString(),createdAt:new Date().toISOString(),status:'active',bookName:d.bookName,subject:d.subject,bookInfo:d.bookInfo||''};}
+        function updateRecord(id,obj){let idx=records.findIndex(i=>i.id===id);if(idx>-1)records[idx]={...records[idx],...obj};}
+
+        function renderList(list){
+            const wrap=document.getElementById('recordList');wrap.innerHTML='';
+            if(list.length===0){wrap.innerHTML=`<div class="empty-state"><h3>暫時無相關書籍</h3></div>`;return;}
+            list.forEach(item=>{
+                const isDone = item.status==='done';
+                const isTrade = item.status==='active';
+                const card=document.createElement('div');
+                let showBtn=false;
+                let tip='';
+                if(currentFilter==='active'){
+                    card.className=isDone?'book-card done normal':'book-card trade';
+                    if(isTrade)card.onclick=()=>openBorrowModal(item.id);
+                    showBtn=true;
+                    tip=isTrade?'<div class="trade-tip">👉點擊卡片申請交易</div>':'';
+                }else if(currentFilter==='done'){
+                    card.className='book-card done normal';
+                    showBtn=true;
+                }else{
+                    card.className=isDone?'book-card done normal':'book-card normal';
+                    showBtn=false;
+                }
+                const btnTxt = isDone?'重新上架':'標記已售出';
+                const info = item.bookInfo||'無詳細資訊';
+                const btnHtml = showBtn?`<button class="btn-toggle" onclick="event.stopPropagation();handleStatusToggle('${item.id}')">${btnTxt}</button>`:'';
+                card.innerHTML=`${isDone?'<div class="sold-badge">已售出</div>':''}${tip}
+                <div class="card-header"><span class="card-subject">${escapeHtml(item.subject)}</span></div>
+                <div class="card-title">${escapeHtml(item.bookName)}</div>
+                <div class="card-info">${escapeHtml(info)}</div>
+                <div class="card-footer"><span class="card-date">${formatDate(item.createdAt)}</span>${btnHtml}</div>`;
+                wrap.appendChild(card);
+            })
+        }
+
+        //切換頁面布局
+        function changeLayout(){
+            //全庫：左邊全顯示、隱藏搜尋
+            if(currentFilter==='all'){
+                leftInner.classList.remove('hide-content');
+                searchWrap.classList.add('all-page-hide-search');
+                mainWrap.classList.remove('fullpage-active');
+            }
+            //可交易：滿版單欄、左邊隱藏內文、顯示搜尋
+            else if(currentFilter==='active'){
+                leftInner.classList.add('hide-content');
+                searchWrap.classList.remove('hide-search','all-page-hide-search');
+                mainWrap.classList.add('fullpage-active');
+            }
+            //已售出：滿版、隱藏搜尋+左邊內文
+            else if(currentFilter==='done'){
+                leftInner.classList.add('hide-content');
+                searchWrap.classList.add('hide-search','all-page-hide-search');
+                mainWrap.classList.add('fullpage-active');
+            }
+        }
+
+        function normalize(obj){let res={};Object.keys(obj).forEach(k=>{let f=KEY_MAP_SHEET_TO_FRONT[k];if(f)res[f]=obj[k];});return res;}
+        async function fetchData(){let r=await fetch(APPS_SCRIPT_URL);let d=await r.json();if(d.ok)return d.records.map(normalize);throw 'err';}
+        async function syncSheet(payload){let trans={...payload};if(trans.record){trans.record={};Object.entries(payload.record).forEach(([k,v])=>trans.record[KEY_MAP_FRONT_TO_SHEET[k]||k]=v);}await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{"Content-Type":"text/plain"},body:JSON.stringify(trans)}).catch(e=>{});}
+
+        const selSub=document.getElementById('subjectSelect');
+        const otherDom=document.getElementById('otherSubjectWrap');
+        const cusSub=document.getElementById('customSubject');
+        selSub.onchange=()=>otherDom.style.display=selSub.value==='other'?'block':'none';
+
+        function openBorrowModal(id){currentBorrowBookId=id;document.getElementById('borrowMask').classList.add('open');document.getElementById('borrowForm').reset();}
+        function closeBorrowModal(){document.getElementById('borrowMask').classList.remove('open');currentBorrowBookId='';}
+        function searchBook(){let kw=document.getElementById('searchInput').value.trim().toLowerCase();let res=records.filter(x=>x.status==='active'&&x.bookName.toLowerCase().includes(kw));renderList(res);}
+        document.getElementById('searchInput').addEventListener('input',searchBook);
+
+        document.getElementById('borrowForm').addEventListener('submit',async e=>{
+            e.preventDefault();let bid=currentBorrowBookId;updateRecord(bid,{status:'done'});saveData(records);applyFilter();searchBook();await syncSheet({action:'update',id:bid,changes:{status:'done'}});closeBorrowModal();showToast('交易申請成功，書本標記已售出');
+        })
+
+        document.getElementById('addRecordForm').addEventListener('submit',async e=>{
+            e.preventDefault();let sub=selSub.value;if(sub==='other'){sub=cusSub.value.trim();if(!sub){showToast('請填寫自訂科目');return;}}
+            let bn=document.getElementById('bookName').value.trim();let bi=document.getElementById('bookInfo').value.trim();
+            let newB=createRecord({bookName:bn,subject:sub,bookInfo:bi});records.unshift(newB);saveData(records);applyFilter();searchBook();await syncSheet({action:'create',record:newB});
+            e.target.reset();otherDom.style.display='none';showToast('書本上架成功');
+        })
+
+        window.handleStatusToggle=async function(id){
+            let item=records.find(x=>x.id===id);if(!item)return;let newSt=item.status==='active'?'done':'active';
+            updateRecord(id,{status:newSt});saveData(records);applyFilter();searchBook();await syncSheet({action:'update',id:id,changes:{status:newSt}});
+            showToast(newSt==='done'?'已標記為已售出':'書本重新開放上架');
+        }
+
+        document.querySelectorAll('.filter-btn').forEach(btn=>{
+            btn.onclick=()=>{
+                document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+                btn.classList.add('active');currentFilter=btn.dataset.filter;changeLayout();applyFilter();
+            }
+        })
+        function applyFilter(){let arr;if(currentFilter==='all')arr=records;else arr=records.filter(x=>x.status===currentFilter);renderList(arr);}
+        function formatDate(s){if(!s)return'';let d=new Date(s);return d.toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'});}
+        function escapeHtml(t){if(!t)return t;return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+        function showToast(msg){let t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+        async function init(){try{records=await fetchData();saveData(records);}catch{records=loadData();}changeLayout();applyFilter();searchBook();}
+        changeLayout();init();
+    </script>
+</body>
+</html>
