@@ -3,78 +3,424 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>校園二手課本交換站</title>
+    <title>校園二手課本交易站</title>
     <style>
-        /* 保持原有的 CSS 樣式不變 */
         :root {
-            --primary-color: #2c7a7b;
-            --primary-hover: #234e52;
-            --bg-color: #f0f4f8;
+            --primary-color: #389494;
+            --primary-light: #e6f8f8;
+            --primary-hover: #297272;
+            --bg-color: #f7fafc;
             --card-bg: #ffffff;
             --text-main: #2d3748;
             --text-secondary: #718096;
-            --border-radius: 12px;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --shadow-hover: 0 10px 15px rgba(0, 0, 0, 0.1);
-            --success: #48bb78;
-            --done-bg: #edf2f7;
-            --done-text: #a0aec0;
+            --border-color: #e2e8f0;
+            --radius-big: 18px;
+            --radius-normal: 12px;
+            --radius-small: 8px;
+            --shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+            --shadow-hover: 0 8px 18px rgba(0, 0, 0, 0.07);
+            --done-bg: #f1f5f9;
+            --done-text: #94a3b8;
+            --success-green: #48bb78;
+            --green-light: #f0fff4;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        
-        header { text-align: center; margin-bottom: 40px; }
-        h1 { color: var(--primary-color); font-size: 2.5rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 15px; }
-        .subtitle { color: var(--text-secondary); font-size: 1.1rem; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+        }
 
-        .main-content { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
-        @media (max-width: 768px) { .main-content { grid-template-columns: 1fr; } }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding: 24px 18px;
+            min-height: 100vh;
+        }
 
-        .form-card { background: var(--card-bg); padding: 25px; border-radius: var(--border-radius); box-shadow: var(--shadow); height: fit-content; position: sticky; top: 20px; }
-        .form-card h2 { margin-bottom: 20px; font-size: 1.25rem; border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
-        input[type="text"], textarea { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 1rem; transition: border-color 0.2s; }
-        input:focus, textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(44, 122, 123, 0.1); }
-        textarea { resize: vertical; min-height: 80px; }
-        .btn-submit { width: 100%; padding: 12px; background-color: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-        .btn-submit:hover { background-color: var(--primary-hover); }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 42px;
+        }
 
-        .list-section { display: flex; flex-direction: column; gap: 20px; }
-        .filters { display: flex; gap: 10px; background: #e2e8f0; padding: 5px; border-radius: 50px; width: fit-content; }
-        .filter-btn { border: none; background: transparent; padding: 8px 20px; border-radius: 40px; cursor: pointer; font-weight: 600; color: var(--text-secondary); transition: all 0.2s; }
-        .filter-btn.active { background: white; color: var(--primary-color); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.1rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-weight: 600;
+        }
 
-        .card-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .book-card { background: var(--card-bg); border-radius: var(--border-radius); padding: 20px; box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; border-left: 5px solid var(--primary-color); position: relative; }
-        .book-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
-        .book-card.done { border-left-color: var(--text-secondary); background-color: var(--done-bg); transform: none; }
-        .book-card.done .card-title { text-decoration: line-through; color: var(--text-secondary); }
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* 固定雙欄網格永遠唔變，解決排版崩潰問題 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 32px;
+        }
+
+        /* 左邊容器永遠保留佔位，只隱藏內文唔銷毀盒子 */
+        .form-card {
+            background: var(--card-bg);
+            padding: 26px;
+            border-radius: var(--radius-big);
+            box-shadow: var(--shadow);
+            height: fit-content;
+            position: sticky;
+            top: 24px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        /* 隱藏內容，盒子保留撐住版面 */
+        .form-card .inner-box.hide-content{
+            visibility: hidden;
+            height:0;
+            overflow:hidden;
+        }
+
+        .form-card h2 {
+            margin-bottom: 22px;
+            font-size: 1.25rem;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom:7px;
+            font-weight: 550;
+            font-size:0.92rem;
+            color: var(--text-main);
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding:13px 15px;
+            border:1px solid var(--border-color);
+            border-radius: var(--radius-normal);
+            font-size: 1rem;
+            transition: all 0.25s ease;
+            background: #fff;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(56, 148, 148, 0.12);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height:92px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding:13px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-normal);
+            font-size: 1rem;
+            font-weight: 550;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            margin-top:6px;
+        }
+        .btn-submit:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .other-subject-wrap {
+            display: none;
+            margin-top:10px;
+        }
+        .other-subject-wrap.show {
+            display: block;
+        }
+
+        .list-section {
+            display: flex;
+            flex-direction: column;
+            gap:22px;
+        }
+
+        /* 頁籤按鈕圓潤優化 */
+        .filters {
+            display: flex;
+            gap:10px;
+            background: #edf2f7;
+            padding:7px;
+            border-radius: 999px;
+            width: fit-content;
+        }
+        .filter-btn {
+            border: none;
+            background: transparent;
+            padding:10px 20px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight:550;
+            color: var(--text-secondary);
+            transition: all 0.25s ease;
+            font-size:0.92rem;
+        }
+        .filter-btn.active {
+            background: white;
+            color: var(--primary-color);
+            box-shadow: var(--shadow);
+        }
+
+        .search-box-wrap{
+            background: var(--card-bg);
+            padding:22px;
+            border-radius: var(--radius-big);
+            box-shadow: var(--shadow);
+            border:1px solid var(--border-color);
+            transition:0.3s;
+        }
+        .search-box-wrap.hide-search{
+            visibility:hidden;
+            height:0;
+            padding:0;
+            overflow:hidden;
+        }
+        .search-box-wrap h4{
+            color:var(--primary-color);
+            margin-bottom:11px;
+            font-weight:600;
+        }
+
+        .card-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
+            gap:26px;
+        }
+
+        /* 可交易卡片（綠色圓潤風） */
+        .book-card.trade {
+            background: var(--card-bg);
+            border-radius: var(--radius-big);
+            padding:24px;
+            box-shadow: var(--shadow);
+            transition: all 0.28s ease;
+            display: flex;
+            flex-direction: column;
+            border:1px solid #d4f4e3;
+            cursor:pointer;
+        }
+        .book-card.trade:hover{
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-hover);
+        }
+        /* 普通/已售出卡片 */
+        .book-card.normal{
+            background: var(--card-bg);
+            border-radius: var(--radius-big);
+            padding:24px;
+            box-shadow: var(--shadow);
+            transition: all 0.28s ease;
+            display: flex;
+            flex-direction: column;
+            border:1px solid var(--border-color);
+            cursor:default;
+        }
+        .book-card.done {
+            background-color: var(--done-bg);
+            opacity:0.92;
+        }
+        .book-card.done .card-title {
+            text-decoration: line-through;
+            color: var(--done-text);
+        }
         
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-        .card-subject { background: #e6fffa; color: var(--primary-color); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
-        .book-card.done .card-subject { background: #cbd5e0; color: var(--text-secondary); }
-        
-        .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; color: var(--text-main); word-break: break-word; }
-        .card-info { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 15px; flex-grow: 1; white-space: pre-wrap; }
-        .card-footer { margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid #eee; }
-        .card-date { font-size: 0.8rem; color: #a0aec0; }
-        .btn-toggle { padding: 6px 12px; border: 1px solid var(--primary-color); background: transparent; color: var(--primary-color); border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
-        .btn-toggle:hover { background: var(--primary-color); color: white; }
-        .book-card.done .btn-toggle { border-color: var(--text-secondary); color: var(--text-secondary); }
-        .book-card.done .btn-toggle:hover { background: var(--text-secondary); color: white; }
-        
-        .sold-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); border: 3px solid var(--text-secondary); color: var(--text-secondary); font-size: 1.5rem; font-weight: 900; padding: 5px 15px; border-radius: 8px; text-transform: uppercase; opacity: 0.2; pointer-events: none; z-index: 1; }
-        
-        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 17px; opacity: 0; transition: opacity 0.3s, bottom 0.3s; }
-        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
-        .empty-state { text-align: center; padding: 40px; color: var(--text-secondary); grid-column: 1 / -1; }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom:12px;
+        }
+        .card-subject {
+            background: var(--primary-light);
+            color: var(--primary-color);
+            padding:6px 12px;
+            border-radius:999px;
+            font-size:0.8rem;
+            font-weight:550;
+        }
+        .trade-tip{
+            color:var(--success-green);
+            font-size:0.82rem;
+            font-weight:600;
+            margin-bottom:9px;
+        }
+        .card-title {
+            font-size:1.22rem;
+            font-weight:600;
+            margin-bottom:12px;
+            color: var(--text-main);
+            word-break: break-word;
+        }
+        .card-info {
+            font-size:0.94rem;
+            color: var(--text-secondary);
+            margin-bottom:20px;
+            flex-grow: 1;
+        }
+        .card-footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top:16px;
+            border-top:1px solid var(--border-color);
+        }
+        .card-date {
+            font-size:0.8rem;
+            color: var(--text-secondary);
+        }
+        .btn-toggle {
+            padding:7px 14px;
+            border:1px solid var(--primary-color);
+            background: transparent;
+            color: var(--primary-color);
+            border-radius:999px;
+            cursor: pointer;
+            font-size:0.83rem;
+            font-weight:550;
+            transition: all 0.22s ease;
+        }
+        .btn-toggle:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .book-card.done .btn-toggle {
+            border-color: var(--done-text);
+            color: var(--done-text);
+        }
+        .book-card.done .btn-toggle:hover {
+            background: var(--done-text);
+            color: white;
+        }
+        .sold-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-12deg);
+            border:2px solid var(--done-text);
+            color: var(--done-text);
+            font-size:1.5rem;
+            font-weight:700;
+            padding:7px 18px;
+            border-radius: var(--radius-normal);
+            opacity:0.13;
+            pointer-events: none;
+        }
+        .empty-state {
+            text-align: center;
+            padding:60px 20px;
+            color: var(--text-secondary);
+            grid-column: 1 / -1;
+        }
+        .modal-mask{
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.52);
+            display:none;
+            align-items:center;
+            justify-content:center;
+            z-index:999;
+            padding:15px;
+        }
+        .modal-mask.open{display:flex;}
+        .borrow-modal{
+            width:min(460px,100%);
+            background:#fff;
+            border-radius: var(--radius-big);
+            padding:28px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.12);
+        }
+        .borrow-modal h3{
+            color:var(--primary-color);
+            margin-bottom:22px;
+            padding-bottom:11px;
+            border-bottom:2px solid var(--primary-light);
+        }
+        .modal-btn-group{
+            display:flex;
+            gap:12px;
+            margin-top:24px;
+        }
+        .modal-cancel{
+            flex:1;
+            padding:13px;
+            border:1px solid var(--border-color);
+            background:transparent;
+            border-radius: var(--radius-normal);
+            cursor:pointer;
+            transition:0.2s;
+        }
+        .modal-submit{
+            flex:1;
+            padding:13px;
+            background:var(--primary-color);
+            color:#fff;
+            border:none;
+            border-radius: var(--radius-normal);
+            cursor:pointer;
+            transition:0.2s;
+        }
+        #toast {
+            visibility: hidden;
+            min-width:260px;
+            background-color:#2d3748;
+            color:#fff;
+            text-align:center;
+            border-radius: var(--radius-normal);
+            padding:16px;
+            position:fixed;
+            z-index:100;
+            left:50%;
+            bottom:32px;
+            transform:translateX(-50%);
+            font-size:0.95rem;
+            opacity:0;
+            transition: opacity 0.3s ease, bottom 0.3s ease;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity:1;
+            bottom:42px;
+        }
     </style>
 </head>
 <body>
-
     <div class="container">
         <header>
             <h1>
@@ -82,360 +428,192 @@
                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
                 </svg>
-                校園二手課本交換站
+                校園二手課本交易站
             </h1>
-            <p class="subtitle">循環利用，讓知識流動起來</p>
+            <p class="subtitle">閒置課本互通，低成本入手舊書</p>
         </header>
-
-        <div class="main-content">
-            <!-- 左側：新增表單 -->
-            <section class="form-card">
-                <h2>📚 刊登新書</h2>
-                <form id="addRecordForm">
-                    <div class="form-group">
-                        <label for="bookName">課本名稱 <span style="color:red">*</span></label>
-                        <input type="text" id="bookName" placeholder="例如：微積分、普通物理學" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="subject">所屬科目 <span style="color:red">*</span></label>
-                        <input type="text" id="subject" placeholder="例如：數學系、通識課程" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="bookInfo">價錢與書本狀態 (選填)</label>
-                        <textarea id="bookInfo" placeholder="例如：250元，書約九成新，無畫線。"></textarea>
-                    </div>
-
-                    <button type="submit" class="btn-submit">發布刊登</button>
-                </form>
+        <div class="main-content" id="mainWrap">
+            <section class="form-card" id="leftForm">
+                <div class="inner-box" id="leftInner">
+                    <h2>📚 上架閒置課本</h2>
+                    <form id="addRecordForm">
+                        <div class="form-group">
+                            <label for="bookName">課本名稱 <span style="color:red">*</span></label>
+                            <input type="text" id="bookName" placeholder="例如：微積分、普通物理學" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="subjectSelect">所屬科目 <span style="color:red">*</span></label>
+                            <select id="subjectSelect" required>
+                                <option value="">請選擇科目</option>
+                                <option value="中文">中文</option>
+                                <option value="英文">英文</option>
+                                <option value="數學">數學</option>
+                                <option value="物理">物理</option>
+                                <option value="化學">化學</option>
+                                <option value="生物">生物</option>
+                                <option value="other">其他</option>
+                            </select>
+                            <div class="other-subject-wrap" id="otherSubjectWrap">
+                                <input type="text" id="customSubject" placeholder="自行填寫科目名稱">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="bookInfo">價錢與書本狀態 (選填)</label>
+                            <textarea id="bookInfo" placeholder="例如：250元，書約九成新，無畫線。"></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit">發布上架</button>
+                    </form>
+                </div>
             </section>
-
-            <!-- 右側：列表與過濾 -->
             <section class="list-section">
                 <div class="filters">
-                    <button class="filter-btn active" data-filter="all">全部</button>
-                    <button class="filter-btn" data-filter="active">交換中</button>
+                    <button class="filter-btn active" data-filter="all">全庫書目</button>
+                    <button class="filter-btn" data-filter="active">可交易書籍</button>
                     <button class="filter-btn" data-filter="done">已售出</button>
                 </div>
-
-                <div id="recordList" class="card-list">
-                    <!-- Javascript 將在此處動態生成卡片 -->
+                <div class="search-box-wrap" id="searchWrap">
+                    <h4>🔍 二手書快速搜尋</h4>
+                    <input id="searchInput" placeholder="輸入書名關鍵字（只搜可交易書籍）">
                 </div>
+                <div id="recordList" class="card-list"></div>
             </section>
         </div>
     </div>
-
+    <div class="modal-mask" id="borrowMask">
+        <div class="borrow-modal">
+            <h3>填寫資料申請書本交易</h3>
+            <form id="borrowForm">
+                <input type="hidden" id="targetBookId">
+                <div class="form-group">
+                    <label>你的姓名 <span style="color:red">*</span></label>
+                    <input type="text" id="borrowName" required placeholder="例如：陳小明">
+                </div>
+                <div class="form-group">
+                    <label>就讀年級 <span style="color:red">*</span></label>
+                    <select id="borrowGrade" required>
+                        <option value="">請揀年級</option>
+                        <option>初一</option><option>初二</option><option>初三</option>
+                        <option>高一</option><option>高二</option><option>高三</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>班別 <span style="color:red">*</span></label>
+                    <input type="text" id="borrowClass" required placeholder="例如：3A / 高二1班">
+                </div>
+                <div class="modal-btn-group">
+                    <button type="button" class="modal-cancel" onclick="closeBorrowModal()">取消</button>
+                    <button type="submit" class="modal-submit">確認申請交易</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <div id="toast">操作成功</div>
-
     <script>
-        // --- Backend Connector Settings ---
-
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRcpWIo7IyYcQ4AHxKSmUOjXUqLXoeYI-xvqy7Hzmx7JKGMvZz_NF_Q1cy8sKPFij3CQ/exec";
-
-        // 資料對應表：Sheet Header (中文) <-> Frontend Key (英文)
-        const KEY_MAP_SHEET_TO_FRONT = {
-            "ID": "id",
-            "建立時間": "createdAt",
-            "狀態": "status",
-            "課本名稱": "bookName",
-            "所屬科目": "subject",
-            "書本資訊": "bookInfo"
-        };
-
-        const KEY_MAP_FRONT_TO_SHEET = Object.fromEntries(
-            Object.entries(KEY_MAP_SHEET_TO_FRONT).map(([k, v]) => [v, k])
-        );
-
-        // --- 合約要求的變數與結構 ---
-
-        // 1. 主資料陣列
+        const KEY_MAP_SHEET_TO_FRONT = {"ID":"id","建立時間":"createdAt","狀態":"status","課本名稱":"bookName","所屬科目":"subject","書本資訊":"bookInfo"};
+        const KEY_MAP_FRONT_TO_SHEET = Object.fromEntries(Object.entries(KEY_MAP_SHEET_TO_FRONT).map(([k,v])=>[v,k]));
         let records = [];
-
-        // 2. localStorage Key
         const STORAGE_KEY = 'records';
+        let currentBorrowBookId = "";
+        let currentFilter = "all";
+        const leftInner = document.getElementById('leftInner');
+        const searchWrap = document.getElementById('searchWrap');
 
-        // --- 合約要求的函式 ---
+        function loadData(){const d=localStorage.getItem(STORAGE_KEY);return d?JSON.parse(d):[];}
+        function saveData(arr){localStorage.setItem(STORAGE_KEY,JSON.stringify(arr));}
+        function createRecord(d){return {id:Date.now().toString(),createdAt:new Date().toISOString(),status:'active',bookName:d.bookName,subject:d.subject,bookInfo:d.bookInfo||''};}
+        function updateRecord(id,obj){let idx=records.findIndex(i=>i.id===id);if(idx>-1)records[idx]={...records[idx],...obj};}
 
-        /**
-         * 從 localStorage 載入資料
-         * @returns {Array} records 陣列
-         */
-        function loadData() {
-            const data = localStorage.getItem(STORAGE_KEY);
-            return data ? JSON.parse(data) : [];
-        }
-
-        /**
-         * 將資料儲存至 localStorage
-         * @param {Array} record - 欲儲存的 records 陣列
-         */
-        function saveData(record) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
-        }
-
-        /**
-         * 建立一筆新的 record 物件
-         * @param {Object} formData - 表單資料物件
-         * @returns {Object} 符合結構的 record
-         */
-        function createRecord(formData) {
-            return {
-                id: Date.now().toString(),
-                createdAt: new Date().toISOString(),
-                status: 'active',
-                bookName: formData.bookName,
-                subject: formData.subject,
-                bookInfo: formData.bookInfo || ''
-            };
-        }
-
-        /**
-         * 更新指定 ID 的 record
-         * @param {String} id - record 的 ID
-         * @param {Object} changes - 欲更新的欄位物件
-         */
-        function updateRecord(id, changes) {
-            const index = records.findIndex(r => r.id === id);
-            if (index !== -1) {
-                records[index] = { ...records[index], ...changes };
-            }
-        }
-
-        /**
-         * 渲染清單至頁面
-         * @param {Array} recordsToShow - 欲顯示的 records 陣列
-         */
-        function renderList(recordsToShow) {
-            const listEl = document.getElementById('recordList');
-            listEl.innerHTML = '';
-
-            if (recordsToShow.length === 0) {
-                listEl.innerHTML = `
-                    <div class="empty-state">
-                        <h3>目前沒有資料</h3>
-                        <p>快去左側新增一筆課本吧！</p>
-                    </div>
-                `;
-                return;
-            }
-
-            recordsToShow.forEach(record => {
-                const isDone = record.status === 'done';
-                const card = document.createElement('div');
-                card.className = `book-card ${isDone ? 'done' : ''}`;
-                
-                const btnText = isDone ? '重新上架' : '標記已售出';
-                const displayInfo = record.bookInfo ? record.bookInfo : '無詳細資訊';
-
-                card.innerHTML = `
-                    ${isDone ? '<div class="sold-badge">已售出</div>' : ''}
-                    <div class="card-header">
-                        <span class="card-subject">${escapeHtml(record.subject)}</span>
-                    </div>
-                    <div class="card-title">${escapeHtml(record.bookName)}</div>
-                    <div class="card-info">${escapeHtml(displayInfo)}</div>
-                    <div class="card-footer">
-                        <span class="card-date">${formatDate(record.createdAt)}</span>
-                        <button class="btn-toggle" onclick="handleStatusToggle('${record.id}')">
-                            ${btnText}
-                        </button>
-                    </div>
-                `;
-                listEl.appendChild(card);
-            });
-        }
-
-        // --- 新增 Backend Connector 函式 ---
-
-        /**
-         * 將 Sheet 資料轉換為 Frontend 格式
-         * @param {Object} sheetRecord - 後端回傳的單筆資料
-         * @returns {Object} 轉換後的 Frontend Record
-         */
-        function normalizeRecord(sheetRecord) {
-            const record = {};
-            Object.keys(sheetRecord).forEach(sheetKey => {
-                const frontKey = KEY_MAP_SHEET_TO_FRONT[sheetKey];
-                if (frontKey) {
-                    record[frontKey] = sheetRecord[sheetKey];
+        function renderList(list){
+            const wrap=document.getElementById('recordList');wrap.innerHTML='';
+            if(list.length===0){wrap.innerHTML=`<div class="empty-state"><h3>暫時無相關書籍</h3></div>`;return;}
+            list.forEach(item=>{
+                const isDone = item.status==='done';
+                const isTrade = item.status==='active';
+                const card=document.createElement('div');
+                let showBtn=false;
+                let tip='';
+                if(currentFilter==='active'){
+                    card.className=isDone?'book-card done normal':'book-card trade';
+                    if(isTrade)card.onclick=()=>openBorrowModal(item.id);
+                    showBtn=true;
+                    tip=isTrade?'<div class="trade-tip">👉點擊卡片申請交易</div>':'';
+                }else if(currentFilter==='done'){
+                    card.className='book-card done normal';
+                    showBtn=true;
+                }else{
+                    card.className=isDone?'book-card done normal':'book-card normal';
+                    showBtn=false;
                 }
-            });
-            return record;
+                const btnTxt = isDone?'重新上架':'標記已售出';
+                const info = item.bookInfo||'無詳細資訊';
+                const btnHtml = showBtn?`<button class="btn-toggle" onclick="event.stopPropagation();handleStatusToggle('${item.id}')">${btnTxt}</button>`:'';
+                card.innerHTML=`${isDone?'<div class="sold-badge">已售出</div>':''}${tip}
+                <div class="card-header"><span class="card-subject">${escapeHtml(item.subject)}</span></div>
+                <div class="card-title">${escapeHtml(item.bookName)}</div>
+                <div class="card-info">${escapeHtml(info)}</div>
+                <div class="card-footer"><span class="card-date">${formatDate(item.createdAt)}</span>${btnHtml}</div>`;
+                wrap.appendChild(card);
+            })
         }
 
-        /**
-         * 從 Google Sheet 讀取資料
-         */
-        async function fetchRecordsFromSheet() {
-            const res = await fetch(APPS_SCRIPT_URL);
-            const data = await res.json();
-            if (data.ok) {
-                // 將所有後端資料 normalize 後回傳
-                return data.records.map(normalizeRecord);
-            }
-            throw new Error(data.error || "Unknown error fetching data");
-        }
-
-        /**
-         * 同步資料到 Google Sheet
-         * @param {Object} payload - { action: "create"|"update", ... }
-         */
-        async function syncToSheet(payload) {
-            // 複製一份 payload 進行轉換
-            const transformedPayload = { ...payload };
-
-            // 若是 create，需將 record key 轉為 Sheet header
-            if (payload.action === "create" && payload.record) {
-                transformedPayload.record = {};
-                Object.entries(payload.record).forEach(([key, val]) => {
-                    const sheetKey = KEY_MAP_FRONT_TO_SHEET[key] || key;
-                    transformedPayload.record[sheetKey] = val;
-                });
-            }
-
-            // 若是 update，需將 changes key 轉為 Sheet header
-            if (payload.action === "update" && payload.changes) {
-                transformedPayload.changes = {};
-                Object.entries(payload.changes).forEach(([key, val]) => {
-                    const sheetKey = KEY_MAP_FRONT_TO_SHEET[key] || key;
-                    transformedPayload.changes[sheetKey] = val;
-                });
-            }
-
-            try {
-                await fetch(APPS_SCRIPT_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain" },
-                    body: JSON.stringify(transformedPayload)
-                });
-            } catch (err) {
-                console.error("Sync to sheet failed", err);
-                // 不阻斷使用者操作，僅 Log 錯誤
+        //切換頁只隱藏內文，外框保留，排版永遠唔亂
+        function changeLayout(){
+            if(currentFilter==='active'){
+                leftInner.classList.add('hide-content');
+                searchWrap.classList.remove('hide-search');
+            }else if(currentFilter==='done'){
+                leftInner.classList.add('hide-content');
+                searchWrap.classList.add('hide-search');
+            }else{
+                leftInner.classList.remove('hide-content');
+                searchWrap.classList.remove('hide-search');
             }
         }
 
-        // --- 輔助函式與事件邏輯 ---
+        function normalize(obj){let res={};Object.keys(obj).forEach(k=>{let f=KEY_MAP_SHEET_TO_FRONT[k];if(f)res[f]=obj[k];});return res;}
+        async function fetchData(){let r=await fetch(APPS_SCRIPT_URL);let d=await r.json();if(d.ok)return d.records.map(normalize);throw 'err';}
+        async function syncSheet(payload){let trans={...payload};if(trans.record){trans.record={};Object.entries(payload.record).forEach(([k,v])=>trans.record[KEY_MAP_FRONT_TO_SHEET[k]||k]=v);}await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{"Content-Type":"text/plain"},body:JSON.stringify(trans)}).catch(e=>{});}
 
-        // 初始化 App (修改為 async 以支援 fetch)
-        async function init() {
-            try {
-                // 1. 優先從 Google Sheet 讀取
-                records = await fetchRecordsFromSheet();
-                // 成功讀取後，更新本地 localStorage 作為快取
-                saveData(records);
-            } catch (err) {
-                console.warn("Backend connection failed, using localStorage fallback:", err);
-                // 2. 失敗則 fallback 到 localStorage
-                records = loadData();
+        const selSub=document.getElementById('subjectSelect');
+        const otherDom=document.getElementById('otherSubjectWrap');
+        const cusSub=document.getElementById('customSubject');
+        selSub.onchange=()=>otherDom.style.display=selSub.value==='other'?'block':'none';
+
+        function openBorrowModal(id){currentBorrowBookId=id;document.getElementById('borrowMask').classList.add('open');document.getElementById('borrowForm').reset();}
+        function closeBorrowModal(){document.getElementById('borrowMask').classList.remove('open');currentBorrowBookId='';}
+        function searchBook(){let kw=document.getElementById('searchInput').value.trim().toLowerCase();let res=records.filter(x=>x.status==='active'&&x.bookName.toLowerCase().includes(kw));renderList(res);}
+        document.getElementById('searchInput').addEventListener('input',searchBook);
+
+        document.getElementById('borrowForm').addEventListener('submit',async e=>{
+            e.preventDefault();let bid=currentBorrowBookId;updateRecord(bid,{status:'done'});saveData(records);applyFilter();searchBook();await syncSheet({action:'update',id:bid,changes:{status:'done'}});closeBorrowModal();showToast('交易申請成功，書本標記已售出');
+        })
+
+        document.getElementById('addRecordForm').addEventListener('submit',async e=>{
+            e.preventDefault();let sub=selSub.value;if(sub==='other'){sub=cusSub.value.trim();if(!sub){showToast('請填寫自訂科目');return;}}
+            let bn=document.getElementById('bookName').value.trim();let bi=document.getElementById('bookInfo').value.trim();
+            let newB=createRecord({bookName:bn,subject:sub,bookInfo:bi});records.unshift(newB);saveData(records);applyFilter();searchBook();await syncSheet({action:'create',record:newB});
+            e.target.reset();otherDom.style.display='none';showToast('書本上架成功');
+        })
+
+        window.handleStatusToggle=async function(id){
+            let item=records.find(x=>x.id===id);if(!item)return;let newSt=item.status==='active'?'done':'active';
+            updateRecord(id,{status:newSt});saveData(records);applyFilter();searchBook();await syncSheet({action:'update',id:id,changes:{status:newSt}});
+            showToast(newSt==='done'?'已標記為已售出':'書本重新開放上架');
+        }
+
+        document.querySelectorAll('.filter-btn').forEach(btn=>{
+            btn.onclick=()=>{
+                document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+                btn.classList.add('active');currentFilter=btn.dataset.filter;changeLayout();applyFilter();
             }
-            renderList(records);
-        }
-
-        // 處理表單提交
-        document.getElementById('addRecordForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const bookName = document.getElementById('bookName').value.trim();
-            const subject = document.getElementById('subject').value.trim();
-            const bookInfo = document.getElementById('bookInfo').value.trim();
-
-            // 準備表單資料
-            const formData = { bookName, subject, bookInfo };
-
-            // 1. 建立紀錄
-            const newRecord = createRecord(formData);
-
-            // 2. 加入陣列 (樂觀更新 UI)
-            records.unshift(newRecord);
-
-            // 3. 儲存資料 (localStorage)
-            saveData(records);
-
-            // 4. 重新渲染
-            applyFilterAndRender();
-
-            // 5. 同步到 Google Sheet
-            await syncToSheet({ action: "create", record: newRecord });
-
-            // 重置表單與提示
-            this.reset();
-            showToast("成功刊登新書！");
-        });
-
-        // 處理狀態切換
-        window.handleStatusToggle = async function(id) {
-            const record = records.find(r => r.id === id);
-            if (record) {
-                const newStatus = record.status === 'active' ? 'done' : 'active';
-                
-                // 更新資料
-                updateRecord(id, { status: newStatus });
-                
-                // 儲存與渲染
-                saveData(records);
-                applyFilterAndRender();
-                
-                // 同步到 Google Sheet
-                await syncToSheet({ action: "update", id: id, changes: { status: newStatus } });
-                
-                const msg = newStatus === 'done' ? "已標記為售出/交換" : "已重新上架";
-                showToast(msg);
-            }
-        };
-
-        // 過濾器邏輯
-        let currentFilter = 'all';
-        const filterBtns = document.querySelectorAll('.filter-btn');
-
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                filterBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentFilter = btn.dataset.filter;
-                applyFilterAndRender();
-            });
-        });
-
-        function applyFilterAndRender() {
-            const filteredRecords = records.filter(record => {
-                if (currentFilter === 'all') return true;
-                return record.status === currentFilter;
-            });
-            renderList(filteredRecords);
-        }
-
-        // 工具：日期格式化
-        function formatDate(isoString) {
-            if (!isoString) return '';
-            const date = new Date(isoString);
-            return date.toLocaleDateString('zh-TW', {
-                year: 'numeric', month: '2-digit', day: '2-digit'
-            });
-        }
-
-        // 工具：XSS 防護
-        function escapeHtml(text) {
-            if (!text) return text;
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        // 工具：Toast 提示
-        function showToast(message) {
-            const toastEl = document.getElementById('toast');
-            toastEl.textContent = message;
-            toastEl.className = "show";
-            setTimeout(() => { toastEl.className = toastEl.className.replace("show", ""); }, 3000);
-        }
-
-        // 啟動
-        init();
-
+        })
+        function applyFilter(){let arr;if(currentFilter==='all')arr=records;else arr=records.filter(x=>x.status===currentFilter);renderList(arr);}
+        function formatDate(s){if(!s)return'';let d=new Date(s);return d.toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'});}
+        function escapeHtml(t){if(!t)return t;return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+        function showToast(msg){let t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+        async function init(){try{records=await fetchData();saveData(records);}catch{records=loadData();}changeLayout();applyFilter();searchBook();}
+        changeLayout();init();
     </script>
 </body>
 </html>
